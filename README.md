@@ -33,7 +33,7 @@ Repeat step 5 from Chrome, a file manager, PDF viewer, text selection, etc. You 
 
 ### Browse and open files
 
-Tap **Open folder** to list the configured NAS destination. Tap a subfolder to browse it, use **Up one folder** to return, or **Refresh** to reload. Tap a file to download a copy into the app cache and choose an installed Android app to open it. Opening large files requires enough free phone storage and a working NAS connection. Cached copies remain until Android clears the cache or you clear it in Android app settings. Changes made by another app are not uploaded back to the NAS. Windows programs cannot run on Android; supported files open with compatible installed apps.
+Tap **Open folder** to browse photos and files in an icon grid (default) or detailed list. The **List / Icons** toggle remembers your choice. Photos, supported videos and small PDFs show cached previews where possible; other files display type icons. Large videos use icons to avoid downloading large files for thumbnails. Tap a folder to navigate, or a file to open it.\n\nTap **Open folder** to list the configured NAS destination. Tap a subfolder to browse it, use **Up one folder** to return, or **Refresh** to reload. Tap a file to download a copy into the app cache and choose an installed Android app to open it. Opening large files requires enough free phone storage and a working NAS connection. Cached copies remain until Android clears the cache or you clear it in Android app settings. Changes made by another app are not uploaded back to the NAS. Windows programs cannot run on Android; supported files open with compatible installed apps.
 
 ### Important: NAS path vs Telegram download link
 
