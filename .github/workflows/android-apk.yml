@@ -1,0 +1,61 @@
+name: Build Android APK and publish release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android SDK platform
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Set up Gradle 8.14
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14'
+      - name: Run unit tests and build installable debug APK
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+      - name: Prepare release APK and checksum
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/NAS-uploader-v1.0.0-debug.apk
+          (cd dist && sha256sum NAS-uploader-v1.0.0-debug.apk > SHA256SUMS.txt)
+      - name: Upload APK to workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NAS-uploader-v1.0.0-debug
+          path: dist/
+          retention-days: 90
+      - name: Publish APK in GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.0.0 >/dev/null 2>&1; then
+            gh release upload v1.0.0 dist/NAS-uploader-v1.0.0-debug.apk dist/SHA256SUMS.txt --clobber
+          else
+            gh release create v1.0.0 dist/NAS-uploader-v1.0.0-debug.apk dist/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" \
+              --title 'NAS Uploader v1.0.0 (Android APK)' \
+              --notes 'Android installable debug-signed APK. Default SMB destination: hdd\copy. Choose Telegram Saved Messages manually. Debug-signing keys are not stable across CI builds; uninstall any older debug APK signed with a different key before installing this one.'
+          fi
