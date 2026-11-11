@@ -9,13 +9,29 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="22dp">
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Send to NAS"
-            android:textColor="#173A59"
-            android:textStyle="bold"
-            android:textSize="28sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Send to NAS"
+                android:textColor="#173A59"
+                android:textStyle="bold"
+                android:textSize="28sp" />
+            <ImageButton
+                android:id="@+id/btnSettings"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:src="@drawable/ic_settings"
+                android:contentDescription="NAS settings"
+                android:tint="#173A59"
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
+        </LinearLayout>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -33,12 +49,6 @@
             android:textIsSelectable="true"
             android:textColor="#214E78"
             android:textSize="15sp" />
-        <Button
-            android:id="@+id/btnSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="NAS settings" />
         <Button
             android:id="@+id/btnOpenFolder"
             android:layout_width="match_parent"
