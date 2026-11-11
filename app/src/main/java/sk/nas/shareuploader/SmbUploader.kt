@@ -45,6 +45,46 @@ class SmbUploader(private val context: Context) {
         }
     }
 
+    /** Download a bounded source file for a local thumbnail. Avoids transferring huge videos. */
+    fun downloadSmallFile(
+        settings: NasSettings,
+        segments: List<String>,
+        name: String,
+        output: java.io.File,
+        maximumBytes: Long
+    ) {
+        require(FileNaming.isValidSegment(name)) { "Invalid file name" }
+        require(maximumBytes > 0L) { "Invalid thumbnail size limit" }
+        try {
+            withShare(settings) { share ->
+                val path = folderPath(settings, segments + name)
+                share.openFile(path, EnumSet.of(AccessMask.GENERIC_READ), null,
+                    EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ), SMB2CreateDisposition.FILE_OPEN,
+                    EnumSet.noneOf(SMB2CreateOptions::class.java)).use { remote ->
+                    remote.inputStream.use { input ->
+                        output.outputStream().use { destination ->
+                            val buffer = ByteArray(64 * 1024)
+                            var written = 0L
+                            while (true) {
+                                val count = input.read(buffer)
+                                if (count == -1) break
+                                if (count == 0) continue
+                                if (written > maximumBytes - count) {
+                                    throw IOException("File is too large for a thumbnail")
+                                }
+                                destination.write(buffer, 0, count)
+                                written += count
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error: Exception) {
+            output.delete()
+            throw error
+        }
+    }
+
     data class UploadedFile(val original: String, val savedAs: String, val uncPath: String, val url: String?) {
         fun shareAddress(): String = url ?: uncPath
     }
