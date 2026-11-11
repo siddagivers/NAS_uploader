@@ -12,6 +12,7 @@ import android.os.SystemClock
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -31,7 +32,7 @@ class MainActivity : Activity() {
     private lateinit var uploaded: TextView
     private lateinit var progress: ProgressBar
     private lateinit var btnChoose: Button
-    private lateinit var btnSettings: Button
+    private lateinit var btnSettings: ImageButton
     private lateinit var btnUpload: Button
     private lateinit var btnTelegram: Button
     private lateinit var btnCopy: Button
