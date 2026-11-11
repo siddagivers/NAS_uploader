@@ -59,6 +59,10 @@ For Telegram, the app invokes the standard Telegram share intent. Android doesn'
 * Some OEM share menus may require selecting **More** to show all available share targets.
 * Very large files require reliable Wi-Fi and enough time with the upload screen active.
 
+### Android APK build
+
+A GitHub Actions workflow named **Android APK** runs on each push to `main` and on manual dispatch. Open the repository's **Actions** tab, select the latest successful **Android APK** run, and download the `Send-to-NAS-v1.2.0-debug` artifact. Extract the ZIP to obtain `app-debug.apk`. An uploaded workflow definition is not proof of a successful build; check the run's result before installing.
+
 ### Gradle wrapper
 
 The archive contains the Gradle wrapper properties, but not the generated `gradle-wrapper.jar` binary. If your Android Studio needs the wrapper, install Gradle 8.14 and run the following once in this directory, or use Android Studio's Gradle distribution settings:
