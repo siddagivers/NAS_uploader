@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#F2F6FA">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="22dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="NAS connection"
+            android:textSize="27sp"
+            android:textStyle="bold"
+            android:textColor="#173A59" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="5dp" android:text="Set the connection once. Your Android Share menu will then include Send to NAS." android:textColor="#607588" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="NAS IP address or hostname" />
+        <EditText android:id="@+id/edtHost" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="192.168.1.100" android:singleLine="true" android:inputType="textUri" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="Username" />
+        <EditText android:id="@+id/edtUsername" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="NAS user" android:singleLine="true" android:inputType="text" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="Password" />
+        <EditText android:id="@+id/edtPassword" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Leave empty to keep stored password" android:singleLine="true" android:inputType="textPassword" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="Domain / workgroup (optional)" />
+        <EditText android:id="@+id/edtDomain" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Leave blank for most NAS systems" android:singleLine="true" android:inputType="text" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="SMB share" />
+        <EditText android:id="@+id/edtShare" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="hdd" android:singleLine="true" android:inputType="text" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="Folder inside share" />
+        <EditText android:id="@+id/edtFolder" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="copy" android:singleLine="true" android:inputType="text" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="HTTP/HTTPS public link base (optional)" />
+        <EditText android:id="@+id/edtBaseUrl" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="https://files.example.com/copy" android:singleLine="true" android:inputType="textUri" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="The URL must already point to the same NAS folder, with permissions allowing recipients to access files. The app cannot publish SMB files to the internet." android:textSize="12sp" android:textColor="#657789" />
+        <CheckBox android:id="@+id/checkTelegram" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:checked="true" android:text="Offer Telegram after successful upload" />
+        <Button android:id="@+id/btnSave" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Save settings" />
+        <Button android:id="@+id/btnTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Test NAS connection" />
+        <ProgressBar android:id="@+id/testProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />
+        <TextView android:id="@+id/txtTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textColor="#304860" android:textIsSelectable="true" />
+    </LinearLayout>
+</ScrollView>

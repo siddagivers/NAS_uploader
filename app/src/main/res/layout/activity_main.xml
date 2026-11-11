@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#F2F6FA">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send to NAS"
+            android:textColor="#173A59"
+            android:textStyle="bold"
+            android:textSize="28sp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Share photos, files, webpages and text to your NAS directly from any Android app."
+            android:textColor="#546778" android:textSize="15sp" />
+        <TextView
+            android:id="@+id/txtDestination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:padding="14dp"
+            android:background="#E5EEF7"
+            android:text="NAS not configured"
+            android:textIsSelectable="true"
+            android:textColor="#214E78"
+            android:textSize="15sp" />
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="NAS settings" />
+        <Button
+            android:id="@+id/btnChoose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select photos or files" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Incoming share"
+            style="@style/SectionTitle" />
+        <TextView
+            android:id="@+id/txtIncoming"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Open Gallery, Chrome or another app, tap Share, then choose Send to NAS."
+            android:textColor="#485D71" android:textSize="15sp"
+            android:textIsSelectable="true" />
+        <ProgressBar
+            android:id="@+id/progressUpload"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="7dp"
+            android:layout_marginTop="22dp"
+            android:max="100"
+            android:progress="0" />
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Ready"
+            android:textColor="#34495E" android:textSize="15sp" />
+        <Button
+            android:id="@+id/btnUpload"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Upload / retry"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/txtUploaded"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="#245A38"
+            android:textIsSelectable="true"
+            android:textSize="14sp" />
+        <Button
+            android:id="@+id/btnTelegram"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Send addresses to Telegram"
+            android:visibility="gone" />
+        <Button
+            android:id="@+id/btnCopy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Copy uploaded addresses"
+            android:visibility="gone" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="About links"
+            style="@style/SectionTitle" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="An SMB file path is not an internet download link. Configure an HTTPS base URL in Settings if your NAS serves these files over the web. Otherwise Telegram receives Windows network paths as text."
+            android:textColor="#657789" android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>

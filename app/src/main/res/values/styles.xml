@@ -1,0 +1,23 @@
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#1565C0</item>
+        <item name="android:statusBarColor">#13395C</item>
+        <item name="android:navigationBarColor">#152B3E</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+    <style name="SectionTitle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#193B58</item>
+    </style>
+    <style name="FieldLabel">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#425466</item>
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
+</resources>
