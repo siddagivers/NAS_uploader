@@ -18,6 +18,33 @@ import java.util.concurrent.TimeUnit
 
 /** All methods are blocking: call only from a worker thread. */
 class SmbUploader(private val context: Context) {
+    data class Entry(val name: String, val directory: Boolean, val size: Long)
+
+    private fun folderPath(settings: NasSettings, segments: List<String>): String {
+        require(segments.all { FileNaming.isValidSegment(it) }) { "Invalid folder path" }
+        return (listOf(settings.folder.replace('/', '\\').trim('\\')) + segments)
+            .filter { it.isNotBlank() }.joinToString("\\")
+    }
+
+    fun listFolder(settings: NasSettings, segments: List<String>): List<Entry> = withShare(settings) { share ->
+        share.list(folderPath(settings, segments)).filter { it.fileName != "." && it.fileName != ".." }
+            .map { Entry(it.fileName,
+                it.fileAttributes and FileAttributes.FILE_ATTRIBUTE_DIRECTORY.value != 0L, it.endOfFile) }
+            .sortedWith(compareBy<Entry> { !it.directory }.thenBy { it.name.lowercase() })
+    }
+
+    fun download(settings: NasSettings, segments: List<String>, name: String, output: java.io.File) {
+        require(FileNaming.isValidSegment(name)) { "Invalid file name" }
+        withShare(settings) { share ->
+            val path = folderPath(settings, segments + name)
+            share.openFile(path, EnumSet.of(AccessMask.GENERIC_READ), null,
+                EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ), SMB2CreateDisposition.FILE_OPEN,
+                EnumSet.noneOf(SMB2CreateOptions::class.java)).use { remote ->
+                remote.inputStream.use { source -> output.outputStream().use { source.copyTo(it) } }
+            }
+        }
+    }
+
     data class UploadedFile(val original: String, val savedAs: String, val uncPath: String, val url: String?) {
         fun shareAddress(): String = url ?: uncPath
     }

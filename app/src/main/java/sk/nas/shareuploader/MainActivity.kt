@@ -51,6 +51,9 @@ class MainActivity : Activity() {
         btnCopy = findViewById(R.id.btnCopy)
 
         btnSettings.setOnClickListener { if (!uploading) launchSettings() }
+        findViewById<Button>(R.id.btnOpenFolder).setOnClickListener {
+            if (!uploading) startActivity(Intent(this, FolderActivity::class.java))
+        }
         btnChoose.setOnClickListener { if (!uploading) openPicker() }
         btnUpload.setOnClickListener { beginUpload() }
         btnTelegram.setOnClickListener { sendToTelegram() }

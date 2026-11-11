@@ -31,6 +31,10 @@ Each filename is prefixed with a timestamp and random identifier to avoid overwr
 
 Repeat step 5 from Chrome, a file manager, PDF viewer, text selection, etc. You can also manually pick files from the app's home screen.
 
+### Browse and open files
+
+Tap **Open folder** to list the configured NAS destination. Tap a subfolder to browse it, use **Up one folder** to return, or **Refresh** to reload. Tap a file to download a copy into the app cache and choose an installed Android app to open it. Opening large files requires enough free phone storage and a working NAS connection. Cached copies remain until Android clears the cache or you clear it in Android app settings. Changes made by another app are not uploaded back to the NAS. Windows programs cannot run on Android; supported files open with compatible installed apps.
+
 ### Important: NAS path vs Telegram download link
 
 A Windows SMB path like `\\192.168.1.100\hdd\copy\photo.jpg` is **not** a web link. If you do not configure an HTTP(S) base URL, the app shares the UNC path as plain text. It generally works only on devices with direct SMB access to your LAN/VPN.
