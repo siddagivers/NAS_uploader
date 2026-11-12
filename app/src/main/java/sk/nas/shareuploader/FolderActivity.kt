@@ -1,15 +1,20 @@
 package sk.nas.shareuploader
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.media.MediaMetadataRetriever
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
+import android.provider.Settings
 import android.util.LruCache
 import android.view.Gravity
 import android.view.View
@@ -45,6 +50,7 @@ class FolderActivity : Activity() {
     private lateinit var up: Button
     private lateinit var refresh: Button
     private lateinit var toggle: Button
+    private var pendingApk: File? = null
     private val inFlight = Collections.synchronizedSet(mutableSetOf<String>())
     private val unavailable = Collections.synchronizedSet(mutableSetOf<String>())
     private val thumbnails = object : LruCache<String, Bitmap>(16 * 1024) {
@@ -54,6 +60,7 @@ class FolderActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         segments.addAll(savedInstanceState?.getStringArrayList("segments").orEmpty())
+        pendingApk = savedInstanceState?.getString("pendingApkPath")?.let(::File)
         gridMode = savedInstanceState?.getBoolean("gridMode")
             ?: getSharedPreferences("browser", MODE_PRIVATE).getBoolean("gridMode", true)
 
@@ -403,24 +410,129 @@ class FolderActivity : Activity() {
                 if (isDestroyed || isFinishing) return@runOnUiThread
                 setBusy(false)
                 result.fold({ file ->
-                    val uri = FileProvider.getUriForFile(this, packageName + ".files", file)
-                    val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase())
-                        ?: "application/octet-stream"
-                    try {
-                        startActivity(Intent.createChooser(Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(uri, mime)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }, "Open " + entry.name))
-                        status.text = "Downloaded " + entry.name + ". Choose an app to open it."
-                    } catch (_: ActivityNotFoundException) {
-                        status.text = "No installed app can open this file type."
+                    if (file.extension.equals("apk", ignoreCase = true)) {
+                        installApk(file)
+                    } else {
+                        openWithApp(file, entry.name)
                     }
                 }, { status.text = "Cannot open file: " + SmbUploader.readableError(it) })
             }
         }
     }
 
+    private fun openWithApp(file: File, name: String) {
+        try {
+            val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+            val mime = MimeTypeMap.getSingleton()
+                .getMimeTypeFromExtension(file.extension.lowercase(java.util.Locale.ROOT))
+                ?: "application/octet-stream"
+            val view = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mime)
+                clipData = ClipData.newRawUri(file.name, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(view, "Open $name"))
+            status.text = "Downloaded $name. Choose an app to open it."
+        } catch (_: ActivityNotFoundException) {
+            status.text = "No installed app can open this file type."
+        } catch (error: Exception) {
+            status.text = "Cannot open $name: " + SmbUploader.readableError(error)
+        }
+    }
+
+    /** APK files need a dedicated install intent and permission for this source. */
+    private fun installApk(file: File) {
+        if (!file.isFile) {
+            status.text = "Downloaded APK is no longer available. Reopen it from the NAS."
+            pendingApk = null
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !packageManager.canRequestPackageInstalls()) {
+            pendingApk = file
+            AlertDialog.Builder(this)
+                .setTitle("Allow APK installation")
+                .setMessage(
+                    "Android requires separate permission to install APKs from Send to NAS. " +
+                    "Open settings, enable Allow from this source, then return here. " +
+                    "Telegram has its own independent permission."
+                )
+                .setPositiveButton("Open settings") { _, _ ->
+                    try {
+                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                            data = Uri.parse("package:$packageName")
+                        }
+                        @Suppress("DEPRECATION")
+                        startActivityForResult(intent, REQUEST_INSTALL_SOURCE)
+                        status.text = "Allow APK installation from Send to NAS, then return."
+                    } catch (_: ActivityNotFoundException) {
+                        pendingApk = null
+                        status.text = "Open Android Settings > Apps > Special app access > " +
+                            "Install unknown apps > Send to NAS, then try opening the APK again."
+                    } catch (error: SecurityException) {
+                        pendingApk = null
+                        status.text = "Cannot open installation permissions: " +
+                            SmbUploader.readableError(error)
+                    }
+                }
+                .setNegativeButton("Cancel") { _, _ -> pendingApk = null }
+                .show()
+            return
+        }
+        pendingApk = null
+        try {
+            val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+            val install = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+                data = uri
+                clipData = ClipData.newRawUri(file.name, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            try {
+                startActivity(install)
+                status.text = "Opened Android installer for ${file.name}. Confirm installation there."
+            } catch (_: ActivityNotFoundException) {
+                // Older/custom Android builds may only handle the APK MIME ACTION_VIEW.
+                val view = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/vnd.android.package-archive")
+                    clipData = ClipData.newRawUri(file.name, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(view)
+                status.text = "Opened Android installer for ${file.name}. Confirm installation there."
+            }
+        } catch (_: ActivityNotFoundException) {
+            status.text = "No Android package installer is available for APK files."
+        } catch (error: SecurityException) {
+            status.text = "Android blocked installation: " + SmbUploader.readableError(error) +
+                ". Check permission under Install unknown apps > Send to NAS."
+        } catch (error: Exception) {
+            status.text = "Could not start installer: " + SmbUploader.readableError(error)
+        }
+    }
+
+    @Deprecated("System settings return via the Activity result callback")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_INSTALL_SOURCE) return
+        val file = pendingApk
+        pendingApk = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !packageManager.canRequestPackageInstalls()) {
+            status.text = "Installation is still blocked. Enable Allow from this source " +
+                "for Send to NAS, then open the APK again."
+        } else if (file?.isFile == true) {
+            installApk(file)
+        } else {
+            status.text = "Please reopen the APK from your NAS."
+        }
+    }
+
+    companion object {
+        private const val REQUEST_INSTALL_SOURCE = 410
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("pendingApkPath", pendingApk?.absolutePath)
         outState.putStringArrayList("segments", ArrayList(segments))
         outState.putBoolean("gridMode", gridMode)
         super.onSaveInstanceState(outState)

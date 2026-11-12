@@ -33,6 +33,9 @@ Repeat step 5 from Chrome, a file manager, PDF viewer, text selection, etc. You 
 
 ### Browse and open files
 
+**Installing APKs from the NAS (v1.2.1):** Tap an APK file. The app downloads it to its cache and launches the Android package installer directly, without the generic app chooser. On Android 8+ the first attempt may ask you to allow **Send to NAS** under **Install unknown apps**; this is a per-app setting separate from Telegram. Return to NAS Uploader to resume the install. If the system or device policy blocks unknown-source installs, the app cannot bypass that protection. The FileProvider grants temporary read access to the installer; installation still requires your confirmation.
+
+
 Tap **Open folder** to browse photos and files in an icon grid (default) or detailed list. The **List / Icons** toggle remembers your choice. Photos, supported videos and small PDFs show cached previews where possible; other files display type icons. Large videos use icons to avoid downloading large files for thumbnails. Tap a folder to navigate, or a file to open it.\n\nTap **Open folder** to list the configured NAS destination. Tap a subfolder to browse it, use **Up one folder** to return, or **Refresh** to reload. Tap a file to download a copy into the app cache and choose an installed Android app to open it. Opening large files requires enough free phone storage and a working NAS connection. Cached copies remain until Android clears the cache or you clear it in Android app settings. Changes made by another app are not uploaded back to the NAS. Windows programs cannot run on Android; supported files open with compatible installed apps.
 
 ### Important: NAS path vs Telegram download link
