@@ -64,7 +64,7 @@ For Telegram, the app invokes the standard Telegram share intent. Android doesn'
 
 ### Android APK build
 
-A GitHub Actions workflow named **Android APK** runs on each push to `main` and on manual dispatch. Open the repository's **Actions** tab, select the latest successful **Android APK** run, and download the `Send-to-NAS-v1.2.0-debug` artifact. Extract the ZIP to obtain `app-debug.apk`. An uploaded workflow definition is not proof of a successful build; check the run's result before installing.
+Install the signed release APK from GitHub Releases. See [persistent signing and release setup](docs/RELEASE_SIGNING.md). The **Signed Android release** workflow runs manually or on version tags and requires four encrypted signing secrets. Old disposable debug builds need a one-time reinstall before joining the persistent update lineage.
 
 ### Gradle wrapper
 

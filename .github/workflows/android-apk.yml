@@ -1,67 +1,119 @@
-name: Build Android APK and publish release
+name: Signed Android release
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-    paths:
-      - 'app/**'
-      - 'build.gradle.kts'
-      - 'settings.gradle.kts'
-      - 'gradle.properties'
-      - '.github/workflows/android-apk.yml'
+    tags: ['v*']
 
 permissions:
-  contents: write
-
+  contents: read
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  release:
+    if: github.repository == 'siddagivers/NAS_uploader'
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
+    permissions:
+      contents: write
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-      - name: Install Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Install Android SDK platform
+      - name: Check signing secrets before building
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -n 1)"
-          test -n "$SDKMANAGER" || { echo 'Android SDK manager not found'; exit 1; }
-          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
-          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
-          "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install 'platforms;android-35' 'build-tools;35.0.0'
-      - name: Set up Gradle 8.14
-        uses: gradle/actions/setup-gradle@v4
+          set -euo pipefail
+          for name in KEYSTORE STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Required Android signing secret is unset: $name. See docs/RELEASE_SIGNING.md."
+              exit 1
+            fi
+          done
+      - uses: actions/checkout@v4
         with:
-          gradle-version: '8.14'
-      - name: Run unit tests and build installable debug APK
-        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
-      - name: Prepare release APK and checksum
-        run: |
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk
-          mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk dist/NAS-uploader-v1.2.1-debug.apk
-          (cd dist && sha256sum NAS-uploader-v1.2.1-debug.apk > SHA256SUMS.txt)
-      - name: Upload APK to workflow artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: NAS-uploader-v1.2.1-debug
-          path: dist/
-          retention-days: 90
-      - name: Publish APK in GitHub Releases
+          persist-credentials: false
+      - name: Validate version and release availability
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v1.2.1 >/dev/null 2>&1; then
-            gh release upload v1.2.1 dist/NAS-uploader-v1.2.1-debug.apk dist/SHA256SUMS.txt --clobber
-          else
-            gh release create v1.2.1 dist/NAS-uploader-v1.2.1-debug.apk dist/SHA256SUMS.txt \
-              --target "$GITHUB_SHA" \
-              --title 'NAS Uploader v1.2.1 (Android APK)' \
-              --notes 'Fixes opening downloaded APKs from the NAS by handling per-app install permission and launching the Android installer directly with a grantable content URI. Also includes the gear-icon settings and list/grid NAS browser. Android 8.0 or newer. Default SMB destination: hdd\copy. Choose Telegram Saved Messages manually. Debug-signed APK; uninstall a previous debug APK if Android reports a signing-key conflict. NAS/device integration has not been tested by CI.'
+          set -euo pipefail
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)
+          CODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts)
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$CODE" =~ ^[0-9]+$ ]]
+          TAG="v$VERSION"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then [[ "$GITHUB_REF_NAME" == "$TAG" ]]; fi
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name' > "$RUNNER_TEMP/tags.txt"
+          if grep -Fxq "$TAG" "$RUNNER_TEMP/tags.txt"; then
+            echo '::error::Release already exists. Increment versionName and versionCode.'
+            exit 1
           fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$CODE" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14'
+      - name: Test and build unsigned release
+        run: gradle --no-daemon :app:testReleaseUnitTest :app:lintRelease :app:assembleRelease
+      - name: Sign and verify release identity
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KEYFILE="$RUNNER_TEMP/nas-release.jks"
+          trap 'rm -f "$KEYFILE" "$RUNNER_TEMP/signing-cert.der"' EXIT
+          printf '%s' "$KEYSTORE" | base64 --decode > "$KEYFILE"
+          keytool -exportcert -keystore "$KEYFILE" -alias "$KEY_ALIAS" \
+            -storepass:env STORE_PASSWORD -file "$RUNNER_TEMP/signing-cert.der"
+          EXPECTED=$(tr -d '[:space:]' < signing-certificate.sha256)
+          [[ "$EXPECTED" =~ ^[a-f0-9]{64}$ ]]
+          [[ "$(sha256sum "$RUNNER_TEMP/signing-cert.der" | cut -d' ' -f1)" == "$EXPECTED" ]]
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          mkdir -p dist
+          APK="dist/NAS-uploader-$TAG-release.apk"
+          "$TOOLS/zipalign" -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
+          "$TOOLS/apksigner" sign --ks "$KEYFILE" --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:STORE_PASSWORD --key-pass env:KEY_PASSWORD --out "$APK" "$RUNNER_TEMP/aligned.apk"
+          "$TOOLS/apksigner" verify --verbose --print-certs "$APK" > dist/SIGNING-CERTIFICATE.txt
+          ACTUAL=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' dist/SIGNING-CERTIFICATE.txt)
+          [[ "$ACTUAL" == "$EXPECTED" ]]
+          [[ $(grep -c 'certificate SHA-256 digest:' dist/SIGNING-CERTIFICATE.txt) == 1 ]]
+          "$TOOLS/zipalign" -c -p 4 "$APK"
+          "$TOOLS/aapt" dump badging "$APK" > "$RUNNER_TEMP/badging.txt"
+          grep -F "package: name='sk.nas.shareuploader' versionCode='$VERSION_CODE' versionName='$VERSION'" "$RUNNER_TEMP/badging.txt"
+          if grep -q '^application-debuggable' "$RUNNER_TEMP/badging.txt"; then exit 1; fi
+          (cd dist && sha256sum *.apk > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NAS-uploader-${{ env.TAG }}-release
+          path: |
+            dist/*.apk
+            dist/SHA256SUMS.txt
+            dist/SIGNING-CERTIFICATE.txt
+          if-no-files-found: error
+      - name: Publish signed release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" dist/*.apk dist/SHA256SUMS.txt dist/SIGNING-CERTIFICATE.txt \
+            --target "$GITHUB_SHA" --title "NAS Uploader $TAG" --notes-file docs/RELEASE_NOTES.md
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/nas-release.jks" "$RUNNER_TEMP/signing-cert.der" "$RUNNER_TEMP/aligned.apk"
