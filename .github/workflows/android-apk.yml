@@ -45,23 +45,23 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk
           mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk dist/NAS-uploader-v1.1.0-debug.apk
-          (cd dist && sha256sum NAS-uploader-v1.1.0-debug.apk > SHA256SUMS.txt)
+          cp app/build/outputs/apk/debug/app-debug.apk dist/NAS-uploader-v1.2.0-debug.apk
+          (cd dist && sha256sum NAS-uploader-v1.2.0-debug.apk > SHA256SUMS.txt)
       - name: Upload APK to workflow artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: NAS-uploader-v1.1.0-debug
+          name: NAS-uploader-v1.2.0-debug
           path: dist/
           retention-days: 90
       - name: Publish APK in GitHub Releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v1.1.0 >/dev/null 2>&1; then
-            gh release upload v1.1.0 dist/NAS-uploader-v1.1.0-debug.apk dist/SHA256SUMS.txt --clobber
+          if gh release view v1.2.0 >/dev/null 2>&1; then
+            gh release upload v1.2.0 dist/NAS-uploader-v1.2.0-debug.apk dist/SHA256SUMS.txt --clobber
           else
-            gh release create v1.1.0 dist/NAS-uploader-v1.1.0-debug.apk dist/SHA256SUMS.txt \
+            gh release create v1.2.0 dist/NAS-uploader-v1.2.0-debug.apk dist/SHA256SUMS.txt \
               --target "$GITHUB_SHA" \
-              --title 'NAS Uploader v1.1.0 (Android APK)' \
-              --notes 'Adds Open folder: browse the configured NAS folder and subfolders, download a file and open it using an installed Android app. Android 8.0 or newer. Default SMB destination: hdd\copy. Choose Telegram Saved Messages manually. Debug-signed APK; uninstall a previous debug APK if Android reports a signing-key conflict. NAS/device integration has not been tested by CI.'
+              --title 'NAS Uploader v1.2.0 (Android APK)' \
+              --notes 'Adds Settings gear in the main screen plus icon/grid and list view, cached image/video/PDF previews and NAS file browsing. Android 8.0 or newer. Default SMB destination: hdd\copy. Choose Telegram Saved Messages manually. Debug-signed APK; uninstall a previous debug APK if Android reports a signing-key conflict. NAS/device integration has not been tested by CI.'
           fi
