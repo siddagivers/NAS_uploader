@@ -33,7 +33,6 @@
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/FieldLabel" android:text="HTTP/HTTPS public link base (optional)" />
         <EditText android:id="@+id/edtBaseUrl" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="https://files.example.com/copy" android:singleLine="true" android:inputType="textUri" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="The URL must already point to the same NAS folder, with permissions allowing recipients to access files. The app cannot publish SMB files to the internet." android:textSize="12sp" android:textColor="#657789" />
-        <CheckBox android:id="@+id/checkTelegram" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:checked="true" android:text="Offer Telegram after successful upload" />
         <Button android:id="@+id/btnSave" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Save settings" />
         <Button android:id="@+id/btnTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Test NAS connection" />
         <ProgressBar android:id="@+id/testProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />

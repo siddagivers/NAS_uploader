@@ -4,7 +4,6 @@ import android.app.Activity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -17,7 +16,6 @@ class SettingsActivity : Activity() {
     private lateinit var share: EditText
     private lateinit var folder: EditText
     private lateinit var baseUrl: EditText
-    private lateinit var offerTelegram: CheckBox
     private lateinit var testText: TextView
     private lateinit var testProgress: ProgressBar
     private lateinit var testButton: Button
@@ -34,7 +32,6 @@ class SettingsActivity : Activity() {
         share = findViewById(R.id.edtShare)
         folder = findViewById(R.id.edtFolder)
         baseUrl = findViewById(R.id.edtBaseUrl)
-        offerTelegram = findViewById(R.id.checkTelegram)
         testText = findViewById(R.id.txtTest)
         testProgress = findViewById(R.id.testProgress)
         testButton = findViewById(R.id.btnTest)
@@ -50,7 +47,6 @@ class SettingsActivity : Activity() {
         share.setText(original.share)
         folder.setText(original.folder)
         baseUrl.setText(original.baseUrl)
-        offerTelegram.isChecked = original.offerTelegram
         saveButton.setOnClickListener { save() }
         testButton.setOnClickListener { test() }
     }
@@ -62,8 +58,7 @@ class SettingsActivity : Activity() {
         domain = domain.text.toString().trim(),
         share = share.text.toString().trim(),
         folder = folder.text.toString().trim().replace('/', '\\').trim('\\'),
-        baseUrl = baseUrl.text.toString().trim(),
-        offerTelegram = offerTelegram.isChecked
+        baseUrl = baseUrl.text.toString().trim()
     )
 
     private fun save() {

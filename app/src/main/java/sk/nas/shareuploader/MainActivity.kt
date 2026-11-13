@@ -18,7 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import java.util.concurrent.Executors
 
-/** Receives Gallery/Chrome/other app shares, uploads over SMB, then offers Telegram. */
+/** Receives Gallery/Chrome/other app shares, uploads over SMB, and copies uploaded addresses. */
 class MainActivity : Activity() {
     private val executor = Executors.newSingleThreadExecutor()
     private val pending = mutableListOf<IncomingItem>()
@@ -34,7 +34,6 @@ class MainActivity : Activity() {
     private lateinit var btnChoose: Button
     private lateinit var btnSettings: ImageButton
     private lateinit var btnUpload: Button
-    private lateinit var btnTelegram: Button
     private lateinit var btnCopy: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +47,6 @@ class MainActivity : Activity() {
         btnChoose = findViewById(R.id.btnChoose)
         btnSettings = findViewById(R.id.btnSettings)
         btnUpload = findViewById(R.id.btnUpload)
-        btnTelegram = findViewById(R.id.btnTelegram)
         btnCopy = findViewById(R.id.btnCopy)
 
         btnSettings.setOnClickListener { if (!uploading) launchSettings() }
@@ -57,7 +55,6 @@ class MainActivity : Activity() {
         }
         btnChoose.setOnClickListener { if (!uploading) openPicker() }
         btnUpload.setOnClickListener { beginUpload() }
-        btnTelegram.setOnClickListener { sendToTelegram() }
         btnCopy.setOnClickListener { copyAddresses() }
         render()
         if (savedInstanceState == null) receiveShare(intent)
@@ -175,7 +172,6 @@ class MainActivity : Activity() {
                     "Upload stopped: ${outcome.error}\n${completed.size} item(s) saved. Tap Upload / retry for remaining items."
                 }
                 render()
-                if (outcome.error == null && cfg.offerTelegram && completed.isNotEmpty()) sendToTelegram()
             }
         }
     }
@@ -187,24 +183,6 @@ class MainActivity : Activity() {
             append(file.shareAddress()).append("\n")
         }
     }.trimEnd()
-
-    private fun sendToTelegram() {
-        if (completed.isEmpty()) return
-        val msg = addressMessage()
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, msg)
-        }
-        // Android/Telegram does not provide an official API to force a personal Saved Messages chat.
-        // Telegram opens to let the user select Saved Messages as the recipient.
-        for (pkg in listOf("org.telegram.messenger", "org.thunderdog.challegram", "org.telegram.messenger.web")) {
-            try {
-                startActivity(Intent(shareIntent).setPackage(pkg))
-                return
-            } catch (_: ActivityNotFoundException) { }
-        }
-        startActivity(Intent.createChooser(shareIntent, "Share NAS addresses"))
-    }
 
     private fun copyAddresses() {
         if (completed.isEmpty()) return
@@ -230,7 +208,6 @@ class MainActivity : Activity() {
         btnSettings.isEnabled = !uploading
         btnChoose.isEnabled = !uploading
         btnUpload.visibility = if (!uploading && pending.isNotEmpty()) View.VISIBLE else View.GONE
-        btnTelegram.visibility = if (!uploading && completed.isNotEmpty()) View.VISIBLE else View.GONE
         btnCopy.visibility = if (!uploading && completed.isNotEmpty()) View.VISIBLE else View.GONE
     }
 

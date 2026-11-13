@@ -18,8 +18,7 @@ data class NasSettings(
     val domain: String = "",
     val share: String = "hdd",
     val folder: String = "copy",
-    val baseUrl: String = "",
-    val offerTelegram: Boolean = true
+    val baseUrl: String = ""
 ) {
     fun isReady() = host.isNotBlank() && username.isNotBlank() && password.isNotEmpty() && share.isNotBlank()
 
@@ -47,6 +46,7 @@ data class NasSettings(
 }
 
 class SettingsStore(private val context: Context) {
+    // Legacy offerTelegram preferences are ignored; keep existing NAS settings and keys intact.
     private val prefs = context.getSharedPreferences("nas_settings_v1", Context.MODE_PRIVATE)
 
     fun load(): NasSettings = NasSettings(
@@ -56,8 +56,7 @@ class SettingsStore(private val context: Context) {
         domain = prefs.getString("domain", "") ?: "",
         share = prefs.getString("share", "hdd") ?: "hdd",
         folder = prefs.getString("folder", "copy") ?: "copy",
-        baseUrl = prefs.getString("baseUrl", "") ?: "",
-        offerTelegram = prefs.getBoolean("offerTelegram", true)
+        baseUrl = prefs.getString("baseUrl", "") ?: ""
     )
 
     fun save(value: NasSettings) {
@@ -72,7 +71,6 @@ class SettingsStore(private val context: Context) {
             .putString("share", value.share.trim())
             .putString("folder", value.folder.replace('/', '\\').trim('\\'))
             .putString("baseUrl", value.baseUrl.trim().trimEnd('/'))
-            .putBoolean("offerTelegram", value.offerTelegram)
             .commit()) { "Could not store NAS settings." }
     }
 

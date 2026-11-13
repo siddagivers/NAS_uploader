@@ -104,13 +104,6 @@
             android:textIsSelectable="true"
             android:textSize="14sp" />
         <Button
-            android:id="@+id/btnTelegram"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Send addresses to Telegram"
-            android:visibility="gone" />
-        <Button
             android:id="@+id/btnCopy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -126,7 +119,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="An SMB file path is not an internet download link. Configure an HTTPS base URL in Settings if your NAS serves these files over the web. Otherwise Telegram receives Windows network paths as text."
+            android:text="An SMB file path is not an internet download link. Configure an HTTPS base URL in Settings if your NAS serves these files over the web. Otherwise copied addresses are Windows network paths."
             android:textColor="#657789" android:textSize="13sp" />
     </LinearLayout>
 </ScrollView>

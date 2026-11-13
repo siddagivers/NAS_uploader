@@ -27,24 +27,24 @@ Each filename is prefixed with a timestamp and random identifier to avoid overwr
    * **Public link base:** optional, see below
 4. Tap **Test NAS connection**, then **Save settings**.
 5. Open **Gallery**, select photos, tap **Share**, select **Send to NAS**. The app uploads to `\\192.168.1.100\hdd\copy`.
-6. After completion it can open **Telegram** with the uploaded file's address; choose **Saved Messages** in Telegram and tap Send.
+6. After completion, uploaded addresses remain on screen. Tap **Copy uploaded addresses** to copy them. No messaging app opens and there is no post-upload share prompt.
 
 Repeat step 5 from Chrome, a file manager, PDF viewer, text selection, etc. You can also manually pick files from the app's home screen.
 
 ### Browse and open files
 
-**Installing APKs from the NAS (v1.2.1):** Tap an APK file. The app downloads it to its cache and launches the Android package installer directly, without the generic app chooser. On Android 8+ the first attempt may ask you to allow **Send to NAS** under **Install unknown apps**; this is a per-app setting separate from Telegram. Return to NAS Uploader to resume the install. If the system or device policy blocks unknown-source installs, the app cannot bypass that protection. The FileProvider grants temporary read access to the installer; installation still requires your confirmation.
+**Installing APKs from the NAS (v1.2.1):** Tap an APK file. The app downloads it to its cache and launches the Android package installer directly, without the generic app chooser. On Android 8+ the first attempt may ask you to allow **Send to NAS** under **Install unknown apps**; this is a per-app setting. Return to NAS Uploader to resume the install. If the system or device policy blocks unknown-source installs, the app cannot bypass that protection. The FileProvider grants temporary read access to the installer; installation still requires your confirmation.
 
 
-Tap **Open folder** to browse photos and files in an icon grid (default) or detailed list. The **List / Icons** toggle remembers your choice. Photos, supported videos and small PDFs show cached previews where possible; other files display type icons. Large videos use icons to avoid downloading large files for thumbnails. Tap a folder to navigate, or a file to open it.\n\nTap **Open folder** to list the configured NAS destination. Tap a subfolder to browse it, use **Up one folder** to return, or **Refresh** to reload. Tap a file to download a copy into the app cache and choose an installed Android app to open it. Opening large files requires enough free phone storage and a working NAS connection. Cached copies remain until Android clears the cache or you clear it in Android app settings. Changes made by another app are not uploaded back to the NAS. Windows programs cannot run on Android; supported files open with compatible installed apps.
+Tap **Open folder** to browse photos and files in an icon grid (default) or detailed list. The **List / Icons** toggle remembers your choice. Photos, supported videos and small PDFs show cached previews where possible; other files display type icons. Large videos use icons to avoid downloading large files for thumbnails. Tap a folder to navigate, or a file to open it.
 
-### Important: NAS path vs Telegram download link
+Tap **Open folder** to list the configured NAS destination. Tap a subfolder to browse it, use **Up one folder** to return, or **Refresh** to reload. Tap a file to download a copy into the app cache and choose an installed Android app to open it. Opening large files requires enough free phone storage and a working NAS connection. Cached copies remain until Android clears the cache or you clear it in Android app settings. Changes made by another app are not uploaded back to the NAS. Windows programs cannot run on Android; supported files open with compatible installed apps.
 
-A Windows SMB path like `\\192.168.1.100\hdd\copy\photo.jpg` is **not** a web link. If you do not configure an HTTP(S) base URL, the app shares the UNC path as plain text. It generally works only on devices with direct SMB access to your LAN/VPN.
+### Important: NAS path vs download link
 
-To get clickable links in Telegram, first arrange for a **web server or NAS sharing service** to serve the *same directory*. Example: if `https://files.example.com/copy/photo.jpg` truly serves `\\nas\hdd\copy\photo.jpg`, configure the link base as `https://files.example.com/copy`. The app will append the percent-encoded uploaded file name. **The app does not create HTTP sharing, grant access, or expose SMB outside your LAN.** A private URL may only work over your LAN or VPN. Use HTTPS, authentication, and access control for anything exposed publicly.
+A Windows SMB path like `\\192.168.1.100\hdd\copy\photo.jpg` is **not** a web link. If you do not configure an HTTP(S) base URL, the app copies the UNC path as plain text. It generally works only on devices with direct SMB access to your LAN/VPN.
 
-For Telegram, the app invokes the standard Telegram share intent. Android doesn't allow a third-party app to silently select or post to your personal **Saved Messages** chat via this integration; you choose it yourself. A Telegram bot cannot directly post into your personal Saved Messages chat.
+To copy web links, first arrange for a **web server or NAS sharing service** to serve the *same directory*. Example: if `https://files.example.com/copy/photo.jpg` truly serves `\\nas\hdd\copy\photo.jpg`, configure the link base as `https://files.example.com/copy`. The app will append the percent-encoded uploaded file name. **The app does not create HTTP sharing, grant access, or expose SMB outside your LAN.** A private URL may only work over your LAN or VPN. Use HTTPS, authentication, and access control for anything exposed publicly.
 
 ### Security and networking
 
@@ -62,6 +62,10 @@ For Telegram, the app invokes the standard Telegram share intent. Android doesn'
 * Some OEM share menus may require selecting **More** to show all available share targets.
 * Very large files require reliable Wi-Fi and enough time with the upload screen active.
 
+### Changes in v1.2.3 (version code 6)
+
+Removed the automatic Telegram launch, upload-screen Telegram action and **Offer Telegram after successful upload** setting. NAS SMB uploads, progress, retry, file browsing and copying uploaded addresses are retained. Existing NAS settings and encrypted passwords keep their storage format; the old Telegram preference is ignored without clearing saved settings.
+
 ### Android APK build
 
 Install the signed release APK from GitHub Releases. See [persistent signing and release setup](docs/RELEASE_SIGNING.md). The **Signed Android release** workflow runs manually or on version tags and requires four encrypted signing secrets. Old disposable debug builds need a one-time reinstall before joining the persistent update lineage.
@@ -78,11 +82,11 @@ Then use `./gradlew assembleDebug` (or `gradlew.bat assembleDebug` on Windows). 
 
 ### Source layout
 
-* `MainActivity.kt`: Android Share target, multiple-item queue, progress, Retry and Telegram
+* `MainActivity.kt`: Android Share target, multiple-item queue, progress, Retry and copying uploaded addresses
 * `SettingsActivity.kt`: UI for IP, login, share path, link base and connection test
 * `SettingsStore.kt`: validated NAS settings and Keystore AES/GCM encrypted password
 * `IncomingShare.kt`: EXTRA_STREAM / ClipData / EXTRA_TEXT parsing and document metadata
 * `SmbUploader.kt`: SMBJ client; folder creation, upload, cleanup and URL creation
 * `FileNaming.kt`: filename sanitization, unique naming and link construction
 
-This source package is provided for building in Android Studio. It has **not** been built or run against a NAS in this environment (no Android SDK/NAS is available here).
+Release builds run unit tests, Android lint and APK assembly in GitHub Actions. NAS/device integration still requires testing on a phone with access to your NAS.
